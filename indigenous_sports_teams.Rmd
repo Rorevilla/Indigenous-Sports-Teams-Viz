@@ -17,22 +17,39 @@ use_python("C:/Users/rodrigo.revilla/AppData/Local/Programs/Python/Python38")
 
 library(rvest)
 library(stringr)
+library(dplyr)
+library(jsonlite)
 
 site = read_html("https://en.wikipedia.org/wiki/List_of_secondary_school_sports_team_names_and_mascots_derived_from_indigenous_peoples")
 links <- html_nodes(site, "a")
-page<-bind_rows(lapply(xml_attrs(links), function(x) data.frame(as.list(x), stringsAsFactors=FALSE)))
-page %>% filter(grepl(",",title)) %>% filter(!grepl("High|School",title)) %>% select(href,title)
+city_link <-bind_rows(lapply(xml_attrs(links), function(x) data.frame(as.list(x), stringsAsFactors=FALSE)))
+city_link <- city_link %>% filter(grepl(",",title)) %>% filter(!grepl("High|School",title)) %>% select(href,title)
 
 
-url <- "https://en.wikipedia.org/wiki/San_Antonio"
-infobox <- url %>%  read_html() %>%  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[1]/tbody/tr[10]/td/span[1]/a') %>% html_attr("href") %>% as.character()
+#FUNCIÓN QUE REGRESA LAT, LONG
 
-url2<-paste("https:",infobox,sep="")
-latitud<-read_html(url2) %>% html_nodes(xpath='//*[@id="mw-content-text"]/div/div[1]/table/tbody/tr[1]/td[1]/span[3]/span[1]') %>% html_text() %>% as.numeric()
-longitud<-read_html(url2) %>% html_nodes(xpath='//*[@id="mw-content-text"]/div/div[1]/table/tbody/tr[1]/td[1]/span[3]/span[2]') %>% html_text() %>% as.numeric()
+lat_lon  <- function(city_url){
+  wiki_name <- str_replace(city_url,"/wiki/","")
+  tryCatch({
+  json_url<-paste("https://en.wikipedia.org/w/api.php?action=query&prop=coordinates&titles=",wiki_name,"&format=json",sep="") %>% fromJSON()
+  lat<-json_url$query$pages[[1]]$coordinates$lat
+  lon<-json_url$query$pages[[1]]$coordinates$lon
+  coords <- paste(lat,lon,sep=",")
+  if (identical(coords,character(0))) {
+        wiki_name <- gsub(",.*","\\1",wiki_name)
+        json_url<-paste("https://en.wikipedia.org/w/api.php?action=query&prop=coordinates&titles=",wiki_name,"&format=json",sep="") %>%             fromJSON()
+        lat<-json_url$query$pages[[1]]$coordinates$lat
+        lon<-json_url$query$pages[[1]]$coordinates$lon
+        coords <- paste(lat,lon,sep=",")
+  }
+  return(coords)
+  },error=function(e) {return("error")})
+}
 
 
-
+ppppp<-lapply(city_link$href, lat_lon)
+ppppp %>% data.frame(ppppp)
+city_link$coordinates <- ppppp
 
 
 ```
