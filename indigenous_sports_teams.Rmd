@@ -1,0 +1,39 @@
+---
+title: "Indigenous Sports Teams Viz - r/DataVizRequests"
+output: html_notebook
+---
+
+
+```{r}
+
+
+library(reticulate)
+use_python("C:/Users/rodrigo.revilla/AppData/Local/Programs/Python/Python38")
+
+
+```
+
+```{r}
+
+library(rvest)
+library(stringr)
+
+site = read_html("https://en.wikipedia.org/wiki/List_of_secondary_school_sports_team_names_and_mascots_derived_from_indigenous_peoples")
+links <- html_nodes(site, "a")
+page<-bind_rows(lapply(xml_attrs(links), function(x) data.frame(as.list(x), stringsAsFactors=FALSE)))
+page %>% filter(grepl(",",title)) %>% filter(!grepl("High|School",title)) %>% select(href,title)
+
+
+url <- "https://en.wikipedia.org/wiki/San_Antonio"
+infobox <- url %>%  read_html() %>%  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[1]/tbody/tr[10]/td/span[1]/a') %>% html_attr("href") %>% as.character()
+
+url2<-paste("https:",infobox,sep="")
+latitud<-read_html(url2) %>% html_nodes(xpath='//*[@id="mw-content-text"]/div/div[1]/table/tbody/tr[1]/td[1]/span[3]/span[1]') %>% html_text() %>% as.numeric()
+longitud<-read_html(url2) %>% html_nodes(xpath='//*[@id="mw-content-text"]/div/div[1]/table/tbody/tr[1]/td[1]/span[3]/span[2]') %>% html_text() %>% as.numeric()
+
+
+
+
+
+```
+
