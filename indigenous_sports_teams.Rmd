@@ -106,7 +106,8 @@ city_link$lon<-as.numeric(city_link$lon)
 city_link %<>% mutate(element_color=case_when(element=="Indians"~"Indians",
                                               element=="Warrior(s)"~"Warrior(s)",
                                               element=="Braves"~"Braves",
-                                              TRUE ~ "Other"))
+                                              TRUE ~ "Other (Chiefs, Redskins, etc)"))
+city_link$element_color<-factor(city_link$element_color,levels=c("Indians","Warrior(s)","Braves","Other (Chiefs, Redskins, etc)"))
 
 
 #Map
