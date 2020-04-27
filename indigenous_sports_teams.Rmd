@@ -103,6 +103,10 @@ city_link$coordinates <- coords
 city_link  %<>%  separate(coordinates,into=c("lat","lon"),sep=",")
 city_link$lat<-as.numeric(city_link$lat)
 city_link$lon<-as.numeric(city_link$lon)
+city_link %<>% mutate(element_color=case_when(element=="Indians"~"Indians",
+                                              element=="Warrior(s)"~"Warrior(s)",
+                                              element=="Braves"~"Braves",
+                                              TRUE ~ "Other"))
 
 
 #Map
@@ -114,18 +118,26 @@ ggplot() +
     geom_sf(data = world, fill = "white",color="gray85") +  
     geom_sf(data = states, fill = NA,color="gray85") +
   geom_point(data=city_link, aes(x=lon, y=lat),color="white",fill="white",alpha=0.2,shape=21)+
-    geom_point(data=city_link, aes(x=lon, y=lat),color="black",fill="dodgerblue4",alpha=0.2,shape=21)+
-    geom_point(data=city_link, aes(x=lon, y=lat),color="dodgerblue4",alpha=0.3,shape=1)+
+    geom_point(data=city_link, aes(x=lon, y=lat,fill=element_color),color="black",alpha=0.2,shape=21)+
+    geom_point(data=city_link, aes(x=lon, y=lat,color=element_color),alpha=0.3,shape=1)+
+    scale_fill_manual(values=c("dodgerblue4","deeppink2","chartreuse3","darkgoldenrod1"))+
+    scale_color_manual(values=c("dodgerblue4","deeppink2","chartreuse3","darkgoldenrod1"))+
     coord_sf(xlim = c(-180, -60), ylim = c(15, 73), expand = FALSE)+
     theme(legend.position = "none")+
     theme_void()+
-    labs(title="Indigenous Roots", subtitle="Secondary sports teams with names/mascots derived from indigenous peoples",caption="Data from Wikipedia")+
+    labs(title="Indigenous Roots", subtitle="Secondary sports teams with names/mascots derived from indigenous peoples",caption="Data from Wikipedia",color="Indigenous term",fill="Indigenous term")+
     theme_ipsum_rc()+
+    theme(legend.position = "bottom")+
     theme(panel.border = element_rect(colour = "lightgrey", fill=NA, size=2))+
     theme(panel.grid.major = element_blank())+
     theme(axis.title.x = element_blank(),axis.title.y = element_blank())+
     theme(axis.text.x = element_blank())+
-    theme(panel.background = element_rect(fill = "gray35",colour = "transparent"))
+    theme(panel.background = element_rect(fill = "gray35",colour = "transparent"))+
+    theme(legend.background = element_rect(fill="gray95", size=0.5, linetype="solid"))+
+    theme(legend.background = element_rect(fill="gray95", size=0.5, linetype="solid", colour ="gray35"))+
+    guides(colour = guide_legend(override.aes = list(size=3,alpha=0.75)))+
+    theme(legend.title=element_text(family="Roboto Condensed"))
+
 
 
     
