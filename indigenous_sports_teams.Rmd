@@ -126,7 +126,7 @@ ggplot() +
     coord_sf(xlim = c(-180, -60), ylim = c(15, 73), expand = FALSE)+
     theme(legend.position = "none")+
     theme_void()+
-    labs(title="Indigenous Roots", subtitle="Secondary sports teams with names/mascots derived from indigenous peoples",caption="Data from Wikipedia",color="Indigenous term",fill="Indigenous term")+
+    labs(title="Indigenous Roots", subtitle="Secondary sports teams with names/mascots derived from indigenous peoples",caption="Data from Wikipedia\ngithub.com/Rorevilla",color="Indigenous term",fill="Indigenous term")+
     theme_ipsum_rc()+
     theme(legend.position = "bottom")+
     theme(panel.border = element_rect(colour = "lightgrey", fill=NA, size=2))+
