@@ -19,11 +19,57 @@ library(rvest)
 library(stringr)
 library(dplyr)
 library(jsonlite)
+library(magrittr)
+library(tidyverse)
+library(rnaturalearth)
+library(hrbrthemes)
 
 site = read_html("https://en.wikipedia.org/wiki/List_of_secondary_school_sports_team_names_and_mascots_derived_from_indigenous_peoples")
 links <- html_nodes(site, "a")
 city_link <-bind_rows(lapply(xml_attrs(links), function(x) data.frame(as.list(x), stringsAsFactors=FALSE)))
-city_link <- city_link %>% filter(grepl(",",title)) %>% filter(!grepl("High|School",title)) %>% select(href,title)
+city_link <- city_link %>% filter(grepl(",",title)) %>% filter(!grepl("High|School",title)) %>% filter(!grepl("Education",href)) %>%  select(href,title) %>% filter(row_number()<=987)
+
+city_link %<>% mutate(element=case_when(row_number()<=12 ~"Apaches",
+                                        row_number()<=21 ~"Arrows",
+                                        row_number()<=33 ~"Aztecs",
+                                        row_number()<=37 ~"Big Reds",
+                                        row_number()<=45 ~"Blackhawks",
+                                        row_number()<=156 ~"Braves",
+                                        row_number()<=157 ~"Brownies",
+                                        row_number()<=160 ~"Cherokees",
+                                        row_number()<=162 ~"Chickasaws",
+                                        row_number()<=232 ~"Chiefs",
+                                        row_number()<=272 ~"Chieftains",
+                                        row_number()<=273 ~"Chinook",
+                                        row_number()<=275 ~"Chippewas / Chippewa Raiders",
+                                        row_number()<=278 ~"Choctaws",
+                                        row_number()<=280 ~"Comanches",
+                                        row_number()<=281 ~"Dine' Warriors",
+                                        row_number()<=285 ~"Eskimos / Eskymos",
+                                        row_number()<=286 ~"Halfbreeds",
+                                        row_number()<=287 ~"Hurons",
+                                        row_number()<=692 ~"Indians",
+                                        row_number()<=693 ~"Marauders",
+                                        row_number()<=701 ~"Mohawks",
+                                        row_number()<=702 ~"Mohigans",
+                                        row_number()<=735 ~"Red Raiders/Raiders",
+                                        row_number()<=748 ~"Redmen",
+                                        row_number()<=750 ~"Reds",
+                                        row_number()<=797 ~"Redskins",
+                                        row_number()<=798 ~"Renegades",
+                                        row_number()<=804 ~"Sachems",
+                                        row_number()<=805 ~"Sauras",
+                                        row_number()<=814 ~"Savages",
+                                        row_number()<=815 ~"Scouts",
+                                        row_number()<=819 ~"Seminoles",
+                                        row_number()<=820 ~"Senecas",
+                                        row_number()<=822 ~"Sioux",
+                                        row_number()<=826 ~"Squaws",
+                                        row_number()<=834 ~"Thunderbirds",
+                                        row_number()<=836 ~"Tomahawk(s)",
+                                        row_number()<=838 ~"Tribe",
+                                        row_number()<=839 ~"Wamps",
+                                        row_number()<=987 ~"Warrior(s)",))
 
 
 #FUNCIÓN QUE REGRESA LAT, LONG
@@ -41,6 +87,9 @@ lat_lon  <- function(city_url){
         lat<-json_url$query$pages[[1]]$coordinates$lat
         lon<-json_url$query$pages[[1]]$coordinates$lon
         coords <- paste(lat,lon,sep=",")
+          if (identical(coords,character(0))) {
+            return(NA)
+          }
   }
   return(coords)
   },error=function(e) {return("error")})
@@ -48,8 +97,39 @@ lat_lon  <- function(city_url){
 
 
 ppppp<-lapply(city_link$href, lat_lon)
-ppppp %>% data.frame(ppppp)
-city_link$coordinates <- ppppp
+coords <- unlist(ppppp)
+city_link$coordinates <- coords
+
+city_link  %<>%  separate(coordinates,into=c("lat","lon"),sep=",")
+city_link$lat<-as.numeric(city_link$lat)
+city_link$lon<-as.numeric(city_link$lon)
+
+
+#Map
+world <- ne_countries(country="united states of america",returnclass = "sf")
+library("maps")
+states <- st_as_sf(map("state", plot = FALSE, fill = TRUE))
+
+ggplot() +
+    geom_sf(data = world, fill = "white",color="gray85") +  
+    geom_sf(data = states, fill = NA,color="gray85") +
+  geom_point(data=city_link, aes(x=lon, y=lat),color="white",fill="white",alpha=0.2,shape=21)+
+    geom_point(data=city_link, aes(x=lon, y=lat),color="black",fill="dodgerblue4",alpha=0.2,shape=21)+
+    geom_point(data=city_link, aes(x=lon, y=lat),color="dodgerblue4",alpha=0.3,shape=1)+
+    coord_sf(xlim = c(-180, -60), ylim = c(15, 73), expand = FALSE)+
+    theme(legend.position = "none")+
+    theme_void()+
+    labs(title="Indigenous Roots", subtitle="Secondary sports teams with names/mascots derived from indigenous peoples",caption="Data from Wikipedia")+
+    theme_ipsum_rc()+
+    theme(panel.border = element_rect(colour = "lightgrey", fill=NA, size=2))+
+    theme(panel.grid.major = element_blank())+
+    theme(axis.title.x = element_blank(),axis.title.y = element_blank())+
+    theme(axis.text.x = element_blank())+
+    theme(panel.background = element_rect(fill = "gray35",colour = "transparent"))
+
+
+    
+  
 
 
 ```
